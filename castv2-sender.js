@@ -176,7 +176,7 @@ module.exports = function(RED) {
             if (node.client) {
                 try {
                     node.client.close();
-                } catch (exception) { 
+                } catch (exception) {
                     // Swallow close exceptions
                 }
             }
@@ -195,7 +195,7 @@ module.exports = function(RED) {
                 node.status({ fill: "red", shape: "dot", text: "error" });
                 node.cleanup();
 
-                if (done) { 
+                if (done) {
                     done(error);
                 } else {
                     node.error(error, error.message);
@@ -232,7 +232,7 @@ module.exports = function(RED) {
                             let GenericApplication = function(client, session) { Application.apply(this, arguments); };
                             util.inherits(GenericApplication, Application);
                             GenericApplication.APP_ID = msg.appId;
-    
+
                             app = GenericApplication;
                         }
 
@@ -249,6 +249,12 @@ module.exports = function(RED) {
                     .then(sessions => {
                         // Join or launch new session
                         let activeSession = sessions.find(session => session.appId === app.APP_ID);
+
+                        // if we didn't find a session by app id, select the first session
+                        if(!activeSession && sessions.length > 0) {
+                            activeSession = sessions[0];
+                        }
+
                         if (activeSession) {
                             return node.client.joinAsync(activeSession, app);
                         } else {
@@ -257,12 +263,12 @@ module.exports = function(RED) {
                     })
                     .then(receiver => {
                         node.status({ fill: "green", shape: "dot", text: "joined" });
-                        return node.sendCastCommandAsync(receiver, msg.payload);    
+                        return node.sendCastCommandAsync(receiver, msg.payload);
                     })
                     .then(status => {
                         node.status({ fill: "green", shape: "dot", text: "idle" });
                         node.cleanup();
-            
+
                         if (status) send({ payload: status });
                         if (done) done();
                     })
